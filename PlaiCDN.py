@@ -567,11 +567,18 @@ for i in range(content_count):
         print('Publisher: ' + ret_publisher)
         print('Current Version: ' + ret_curr_version)
         print('Title Size: ' + ret_title_size + 'mb')
-        if ret_crypto_seed != '':
-            print('9.6 Crypto Seed: ' + ret_crypto_seed)
-            # Add crypto seed to crypto database
-            crypto_db.add_seed(title_id, ret_crypto_seed)
-            crypto_db.gen_seeddb()
+        if gen_seed == 1:
+            print('')
+            if ret_crypto_seed != '':
+                print('9.6 Crypto Seed: ' + ret_crypto_seed)
+                # Add crypto seed to crypto database
+                crypto_db.add_seed(title_id, ret_crypto_seed)
+                crypto_db.gen_seeddb()
+                raise SystemExit(0)
+            if ret_crypto_seed == '':
+                print('Title ' + title_id + ' does not have a 9.6 crypto seed')
+                raise SystemExit(0)
+
         print('')
         if 'NCCH' not in check_temp_out.decode('UTF-8', 'ignore'):
             decryptor = AES.new(unhexlify(title_key), AES.MODE_CBC, unhexlify(c_idx + '0000000000000000000000000000'))
