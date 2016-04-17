@@ -249,7 +249,7 @@ for i in range(len(sys.argv)):
                 file_handler.seek(8, os.SEEK_CUR)
                 title_id = file_handler.read(8)
                 decrypted_title_key = file_handler.read(16)
-                print('{:} {:}'.format(codecs.encode(title_id, 'hex'), codecs.encode(decrypted_title_key, 'hex')))
+                print('%s: %s' % ((hexlify(title_id)).decode(), (hexlify(decrypted_title_key)).decode()))
         raise SystemExit(0)
 
 for i in range(len(sys.argv)):
