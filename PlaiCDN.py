@@ -166,7 +166,7 @@ def getTitleInfo(title_id):
                 region = region + 'HKG'
             if ('KR') in country_code:
                 region = region + 'KOR'
-            if country_code in eur_array:
+            if country_code in eur_array and 'EUR' not in region:
                 region = region + 'EUR'
     if region == '':
         raise
