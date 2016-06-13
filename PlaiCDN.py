@@ -4,13 +4,13 @@
 #requires makerom (https://github.com/profi200/Project_CTR/releases)
 #this is a Python 3 script
 
-from xml.dom import minidom
 from subprocess import DEVNULL, STDOUT, call, check_call
 from struct import pack, unpack
 from binascii import hexlify, unhexlify
 from Crypto.Cipher import AES
 from hashlib import sha256
 from imp import reload
+import json
 import platform
 import os
 import struct
@@ -116,85 +116,102 @@ def getTitleInfo(title_id):
         res_index.extend(['-eShop Content-', '-eShop Content Update-'])
     if tid_high in tid_index:
         return(res_index[tid_index.index(tid_high)], '---', '-------', '------', '', '---', '---')
-        title_name_stripped, region, product_code, publisher, crypto_seed, curr_version, title_size
 
     # create new SSL context to load decrypted CLCert-A off directory, key and cert are in PEM format
     # see https://github.com/SciresM/ccrypt
-    ctr_context = ssl.SSLContext(ssl.PROTOCOL_SSLv23)
-    ctr_context.load_cert_chain('ctr-common-1.crt', keyfile='ctr-common-1.key')
+    try:
+        ctr_context = ssl.SSLContext(ssl.PROTOCOL_SSLv23)
+        ctr_context.load_cert_chain('ctr-common-1.crt', keyfile='ctr-common-1.key')
+    except FileNotFoundError:
+        if '-checkbin' not in sys.argv:
+            print('\nCould not find certificate files, all secure connections will fail!\n')
+            nocert = 1
+        return('-eShop Content-', '---', '-------', '------', None, '---', '---')
 
     # ninja handles handles actions that require authentication, in addition to converting title ID to internal the CDN content ID
-    ninja_url = 'https://ninja.ctr.shop.nintendo.net/ninja/ws/titles/id_pair'
-    ec_url = 'https://ninja.ctr.shop.nintendo.net/ninja/ws/'
+    ninja_url = 'https://ninja.ctr.shop.nintendo.net/ninja/ws/'
 
-    # use GET request with parameter "title_id[]=mytitle_id" with SSL context to retrieve XML response
+    # use GET request with parameter "title_id[]=mytitle_id" with SSL context
+    # use header "Accept: application/json" to retrieve JSON instead of XML
     try:
-        shop_request = urllib.request.Request(ninja_url + '?title_id[]=' + (hexlify(title_id)).decode())
+        shop_request = urllib.request.Request(ninja_url + 'titles/id_pair' + '?title_id[]=' + (hexlify(title_id)).decode())
         shop_request.get_method = lambda: 'GET'
+        shop_request.headers['Accept'] = 'application/json'
         response = urllib.request.urlopen(shop_request, context=ctr_context)
-        xml_response = minidom.parseString((response.read()).decode('UTF-8', 'replace'))
+        json_response = json.loads((response.read()).decode('UTF-8', 'replace'))
     except urllib.error.URLError as e:
         raise
 
-    # set ns_uid (the internal content ID) to field from XML
-    ns_uid = xml_response.getElementsByTagName('ns_uid')[0].childNodes[0].data
+    # set ns_uid (the internal content ID) to field from JSON
+    ns_uid = json_response['title_id_pairs']['title_id_pair'][0]['ns_uid']
 
     # samurai handles metadata actions, including getting a title's info
     # URL regions are by country instead of geographical regions... for some reason
     samurai_url = 'https://samurai.ctr.shop.nintendo.net/samurai/ws/'
-    region_array = ['JP', 'HK', 'TW', 'KR', 'DE', 'FR', 'ES', 'NL', 'IT', 'US', 'GB']
-    eur_array = ['GB', 'DE', 'FR', 'ES', 'NL', 'IT']
-    region = ''
+    region_dict = {'JP': 'JPN', 'HK': 'HKG', 'TW': 'TWN', 'KR': 'KOR', 'DE': 'EUR', 'FR': 'EUR', 'ES': 'EUR', 'NL': 'EUR', 'IT': 'EUR', 'GB': 'EUR', 'US': 'USA'}
+    region_dict_passed = {}
 
     # try loop to figure out which region the title is from; there is no easy way to do this other than try them all
-    for country_code in region_array:
+    for country_code, region in region_dict.items():
         try:
-            title_request = urllib.request.Request(samurai_url + country_code + '/title/' + ns_uid)
-            titleResponse = urllib.request.urlopen(title_request, context=ctr_context)
-            ec_request = urllib.request.Request(ec_url + country_code + '/title/' + ns_uid + '/ec_info')
-            ec_response = urllib.request.urlopen(ec_request, context=ctr_context)
+            title_request = urllib.request.Request(samurai_url + country_code + '/title/' + str(ns_uid))
+            title_request.headers['Accept'] = 'application/json'
+            response = urllib.request.urlopen(title_request, context=ctr_context)
+            title_response = json.loads((response.read()).decode('UTF-8', 'replace'))
         except urllib.error.URLError as e:
             pass
         else:
-            if ('JP') in country_code:
-                region = region + 'JPN'
-            if ('US') in country_code:
-                region = region + 'USA'
-            if ('TW') in country_code:
-                region = region + 'TWN'
-            if ('HK') in country_code:
-                region = region + 'HKG'
-            if ('KR') in country_code:
-                region = region + 'KOR'
-            if country_code in eur_array and 'EUR' not in region:
-                region = region + 'EUR'
-    if region == '':
+            region_dict_passed.update({country_code: region})
+
+    if len(region_dict_passed) == 0:
         raise
-    if len(region) > 3:
+    elif len(region_dict_passed) > 1:
         region = 'ALL'
+    else:
+        region = list(region_dict_passed.values())[0]
 
-    # get info from the returned XMs from the URL
-    xml_response = minidom.parseString((titleResponse.read()).decode('UTF-8'))
-    title_name = xml_response.getElementsByTagName('name')[0].childNodes[0].data
-    title_name_stripped = title_name.replace('\n', ' ')
-    publisher = xml_response.getElementsByTagName('name')[2].childNodes[0].data
-    product_code = xml_response.getElementsByTagName('product_code')[0].childNodes[0].data
 
-    xml_response = minidom.parseString((ec_response.read()).decode('UTF-8'))
-    curr_version = xml_response.getElementsByTagName('title_version')[0].childNodes[0].data
-    title_size = '{:.5}'.format(int(xml_response.getElementsByTagName('content_size')[0].childNodes[0].data) / 1000000)
+    ec_request = urllib.request.Request(ninja_url + list(region_dict_passed.keys())[0] + '/title/' + str(ns_uid) + '/ec_info')
+    ec_request.headers['Accept'] = 'application/json'
+    response = urllib.request.urlopen(ec_request, context=ctr_context)
+    ec_response = json.loads((response.read()).decode('UTF-8', 'replace'))
+
+    # get info from the returned JSON from the URL
+    title_name = (title_response['title'].get('formal_name', '-eShop Content-')).replace('\n', ' ')
+    publisher = title_response['title']['publisher'].get('name', '------')
+    product_code = title_response['title'].get('product_code', '------')
+
+    curr_version = ec_response['title_ec_info'].get('title_version', '---')
+    title_size = '{:.5}'.format(int(ec_response['title_ec_info'].get('content_size', '---')) / 1000000)
 
     try:
-        crypto_seed = xml_response.getElementsByTagName('external_seed')[0].childNodes[0].data
-    except:
-        crypto_seed = ''
+        crypto_seed = ec_response['title_ec_info']['content_lock'].get('external_seed', None)
+    except KeyError:
+        crypto_seed = None
+        pass
 
     # some windows unicode character bullshit
     if 'Windows' in platform.system():
-        title_name_stripped = ''.join([i if ord(i) < 128 else ' ' for i in title_name_stripped])
+        title_name_stripped = ''.join([i if ord(i) < 128 else ' ' for i in title_name])
         publisher = ''.join([i if ord(i) < 128 else ' ' for i in publisher])
 
     return(title_name_stripped, region, product_code, publisher, crypto_seed, curr_version, title_size)
+
+def printTitleInfo(title_name_stripped, region, product_code, publisher, crypto_seed, curr_version, title_size):
+    print('\n~\n')
+
+    print('Title Name: ' + title_name_stripped)
+    print('Region: ' + region)
+    print('Product Code: ' + product_code)
+    print('Publisher: ' + publisher)
+    print('Current Version: ' + str(curr_version))
+    if title_size == '---':
+        print('Title Size: ' + title_size)
+    else:
+        print('Title Size: ' + title_size + 'mb')
+    if crypto_seed != None:
+        print('9.6 Crypto Seed: ' + crypto_seed)
+    print('')
 
 #=========================================================================================================
 # Seeddb implementation
@@ -224,7 +241,7 @@ class crypto_handler:
             seeddb_handler.write(unhexlify(seed_count)[::-1])
             for title_id in seed_db:
                 # Title_id is reversed in seeddb.bin
-                seed = unhexlify(title_id)[::-1] + unhexlify(seed_db[title_id]) + '\x00'*16
+                seed = unhexlify(title_id)[::-1] + unhexlify(seed_db[title_id]) + b'\x00'*8
                 seeddb_handler.write(seed)
             seeddb_handler.close()
 gen_seed = 0
@@ -255,9 +272,6 @@ for i in range(len(sys.argv)):
             print('Invalid arguments')
             raise SystemExit(0)
 
-        if (not os.path.isfile('ctr-common-1.crt')) or (not os.path.isfile('ctr-common-1.crt')):
-                print('\nCould not find certificate files, all secure connections will fail!\n')
-
         base_url = 'http://ccs.cdn.c.shop.nintendowifi.net/ccs/download/' + title_id
         # download tmd_var and set to object
         try:
@@ -282,45 +296,27 @@ for i in range(len(sys.argv)):
             print('Content Index: ' + c_idx)
             print('Content Size:  ' + c_size)
             print('Content Hash:  ' + (hexlify(c_hash)).decode())
-        try:
-            ret_title_name_stripped, ret_region, ret_product_code, ret_publisher, ret_crypto_seed, ret_curr_version, ret_title_size = getTitleInfo((unhexlify(title_id)))
-        except (KeyboardInterrupt, SystemExit):
-            raise
-        except:
-            print('\nCould not retrieve CDN data!\n')
-            ret_region = '---'
-            ret_title_name_stripped = '---Unknown---'
-            ret_product_code = '------'
-            ret_publisher = '------'
-            ret_crypto_seed = ''
-            ret_curr_version = '---'
-            ret_title_size = '---'
+        #try:
+        title_name_stripped, region, product_code, publisher, crypto_seed, curr_version, title_size = getTitleInfo((unhexlify(title_id)))
+        printTitleInfo(title_name_stripped, region, product_code, publisher, crypto_seed, curr_version, title_size)
+        #except:
+        #    raise
 
-        print('\n~\n')
-
-        print('Title Name: ' + ret_title_name_stripped)
-        print('Region: ' + ret_region)
-        print('Product Code: ' + ret_product_code)
-        print('Publisher: ' + ret_publisher)
-        print('Current Version: ' + ret_curr_version)
-        if ret_title_size == '---':
-            print('Title Size: ' + ret_title_size)
-        else:
-            print('Title Size: ' + ret_title_size + 'mb')
-        if ret_crypto_seed != '':
-            print('9.6 Crypto Seed: ' + ret_crypto_seed)
+        if crypto_seed != None:
             # Add crypto seed to crypto database
-            crypto_db.add_seed(title_id, ret_crypto_seed)
+            crypto_db.add_seed(title_id, crypto_seed)
+
         # Generate seeddb.bin from crypto seed database
         if gen_seed == 1:
             crypto_db.gen_seeddb()
-        print('')
+
         raise SystemExit(0)
 
 for i in range(len(sys.argv)):
     if sys.argv[i] == '-checkbin':
-        if (not os.path.isfile('ctr-common-1.crt')) or (not os.path.isfile('ctr-common-1.crt')):
+        if (not os.path.isfile('ctr-common-1.crt')) or (not os.path.isfile('ctr-common-1.key')):
             print('\nCould not find certificate files, all secure connections will fail!')
+            nocert = 1
         check_all = 0
         for i in range(len(sys.argv)):
             if sys.argv[i] == '-checkall': check_all = 1
@@ -348,20 +344,11 @@ for i in range(len(sys.argv)):
                 except urllib.error.URLError as e:
                     continue
                 tmd_var = tmd_var.read()
-                # try to get info from the CDN, if it fails then set title and region to unknown
+                # try to get info from the CDN
                 try:
-                    ret_title_name_stripped, ret_region, ret_product_code, ret_publisher, ret_crypto_seed, ret_curr_version, ret_title_size = getTitleInfo(title_id)
-                except (KeyboardInterrupt, SystemExit):
-                    raise
+                    title_name_stripped, region, product_code, publisher, crypto_seed, curr_version, title_size = getTitleInfo(title_id)
                 except:
-                    print('\nCould not retrieve CDN data!\n')
-                    ret_region = '---'
-                    ret_title_name_stripped = '---Unknown---'
-                    ret_product_code = '------'
-                    ret_publisher = '------'
-                    ret_crypto_seed = ''
-                    ret_curr_version = '---'
-                    ret_title_size = '---'
+                    raise
 
                 content_count = unpack('>H', tmd_var[0x206:0x208])[0]
                 for i in range(content_count):
@@ -389,10 +376,10 @@ for i in range(len(sys.argv)):
                 if 'NCCH' in check_temp_out.decode('UTF-8', 'ignore') or 'WfA' in dsi_check_temp_out.decode('UTF-8', 'ignore'):
                     # format: Title Name (left aligned) gets 40 characters, Title ID (Right aligned) gets 16, Titlekey (Right aligned) gets 32, and Region (Right aligned) gets 3
                     # anything longer is truncated, anything shorter is padded
-                    print("{0:<40.40} {1:>16} {2:>32} {3:>3}".format(ret_title_name_stripped, (hexlify(title_id).decode()).strip(), ((hexlify(decrypted_title_key)).decode()).strip(), ret_region))
+                    print("{0:<40.40} {1:>16} {2:>32} {3:>3}".format(title_name_stripped, (hexlify(title_id).decode()).strip(), ((hexlify(decrypted_title_key)).decode()).strip(), region))
                     # Add crypto seed to crypto database
-                    if ret_crypto_seed != '':
-                        crypto_db.add_seed((hexlify(title_id).decode()).strip(), ret_crypto_seed)
+                    if crypto_seed != '':
+                        crypto_db.add_seed((hexlify(title_id).decode()).strip(), crypto_seed)
             # Generate seeddb.bin from crypto seed database
             if gen_seed == 1:
                 crypto_db.gen_seeddb()
@@ -445,8 +432,8 @@ if len(title_key) != 32 and os.path.isfile('decTitleKeys.bin'):
             decrypted_keys.update({(hexlify(tmp_title_id)).decode() : (hexlify(decrypted_title_key)).decode()})
     try:
         title_key = decrypted_keys[title_id]
-    except:
-        print('Title key not available in decTitleKeys.bin')
+    except KeyError:
+        print('Title key was not provided and is not available in decTitleKeys.bin')
         raise SystemExit(0)
 
 # set CDN default URL
@@ -525,9 +512,6 @@ for i in range(content_count):
     # set output location to a folder named for title id and contentid.dec as the file
     f_out = title_id + '/' + c_id + '.dec'
     if first_pass == 1:
-        if (not os.path.isfile('ctr-common-1.crt')) or (not os.path.isfile('ctr-common-1.crt')):
-            print('\nCould not find certificate files, all secure connections will fail!')
-            nocert = 1
         print('\nDownloading and decrypting the first 272 bytes of ' + c_id + ' for key check...\n')
         # use range requests to download bytes 0 through 271, needed 272 instead of 260 because AES-128-CBC encrypts in chunks of 128 bits
         try:
@@ -539,39 +523,26 @@ for i in range(content_count):
             raise SystemExit(0)
 
         print('Fetching title metadata for ' + title_id + '\n')
-        try:
-            ret_title_name_stripped, ret_region, ret_product_code, ret_publisher, ret_crypto_seed, ret_curr_version, ret_title_size = getTitleInfo((unhexlify(title_id)))
-        except (KeyboardInterrupt, SystemExit):
-            raise
-        except:
-            print('\nCould not retrieve CDN data!\n')
-            ret_region = '---'
-            ret_title_name_stripped = '---Unknown---'
-            ret_product_code = '------'
-            ret_publisher = '------'
-            ret_crypto_seed = ''
-            ret_curr_version = '---'
-            ret_title_size = '---'
+        #try:
+        title_name_stripped, region, product_code, publisher, crypto_seed, curr_version, title_size = getTitleInfo((unhexlify(title_id)))
+        #except:
+        #    raise
         # set IV to offset 0xf0 length 0x10 of ciphertext; thanks to yellows8 for the offset
         check_temp_perm = check_temp.read()
         decryptor = AES.new(unhexlify(title_key), AES.MODE_CBC, check_temp_perm[0xf0:0x100])
         # check for magic ('NCCH') at offset 0x100 length 0x104 of the decrypted content
         check_temp_out = decryptor.decrypt(check_temp_perm)[0x100:0x104]
-        print('Title Name: ' + ret_title_name_stripped)
-        print('Region: ' + ret_region)
-        print('Product Code: ' + ret_product_code)
-        print('Publisher: ' + ret_publisher)
-        print('Current Version: ' + ret_curr_version)
-        print('Title Size: ' + ret_title_size + 'mb')
+
+        printTitleInfo(title_name_stripped, region, product_code, publisher, crypto_seed, curr_version, title_size)
+
         if gen_seed == 1:
             print('')
-            if ret_crypto_seed != '':
-                print('9.6 Crypto Seed: ' + ret_crypto_seed)
+            if crypto_seed != '':
                 # Add crypto seed to crypto database
-                crypto_db.add_seed(title_id, ret_crypto_seed)
+                crypto_db.add_seed(title_id, crypto_seed)
                 crypto_db.gen_seeddb()
                 raise SystemExit(0)
-            if ret_crypto_seed == '':
+            if crypto_seed == '':
                 print('Title ' + title_id + ' does not have a 9.6 crypto seed')
                 raise SystemExit(0)
 
@@ -631,7 +602,7 @@ for i in range(content_count):
     command_c_id = command_c_id + ['-i', f_out + ':0x' + c_idx + ':0x' + c_id]
     first_pass = 0
 
-if ret_crypto_seed == '' and nocert == 1 and no_wait == 0:
+if crypto_seed == '' and nocert == 1 and no_wait == 0:
     print('')
     print('Could not check for 9.6 crypto seed automatically due to secure connection failure!')
     print('')
@@ -641,7 +612,7 @@ if ret_crypto_seed == '' and nocert == 1 and no_wait == 0:
     print('')
     input('Press Enter to continue...')
 
-if ret_crypto_seed != '' and no_wait == 0:
+if crypto_seed != '' and no_wait == 0:
     print('')
     print('This is a 9.6+ eShop game which uses seed encryption.')
     print('')
