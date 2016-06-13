@@ -220,15 +220,11 @@ class crypto_handler:
             s_out = 'seeddb.bin'
             seed_db = self.crypto_db
         with open(s_out, 'wb') as seeddb_handler:
-            seed_count = hex(len(seed_db)).split('x')[1].zfill(32)
-            seed_count = "".join(reversed([seed_count[i:i+2] for i in range(0, len(seed_count), 2)]))
-            seeddb_handler.write(unhexlify(seed_count))
+            seed_count = '{:032X}'.format(len(seed_db))
+            seeddb_handler.write(unhexlify(seed_count)[::-1])
             for title_id in seed_db:
                 # Title_id is reversed in seeddb.bin
-                seed_title = "".join(reversed([title_id[i:i+2] for i in range(0, len(title_id), 2)]))
-                seed_crypto = seed_db[title_id]
-                seed_padding = "".zfill(16)
-                seed = unhexlify(seed_title+seed_crypto+seed_padding)
+                seed = unhexlify(title_id)[::-1] + unhexlify(seed_db[title_id]) + '\x00'*16
                 seeddb_handler.write(seed)
             seeddb_handler.close()
 gen_seed = 0
