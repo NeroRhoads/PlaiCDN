@@ -620,7 +620,7 @@ if crypto_seed != '' and no_wait == 0:
     print('the generated seeddb.bin and .cia file in the Title ID folder')
     print('to \'/D9Game/\' on your SD card, then use the following option in Decrypt9:')
     print('')
-    print('\'Content Decryptor Options\' > \'NCCH/NCSD Decryptor\'')
+    print('\'Content Decryptor Options\' > \'CIA Decryptor (deep)\'')
     print('')
     print('Once you have decrypted the file, the resulting .cia can successfully be installed')
     print('')
