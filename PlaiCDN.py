@@ -296,11 +296,9 @@ for i in range(len(sys.argv)):
             print('Content Index: ' + c_idx)
             print('Content Size:  ' + c_size)
             print('Content Hash:  ' + (hexlify(c_hash)).decode())
-        #try:
+
         title_name_stripped, region, product_code, publisher, crypto_seed, curr_version, title_size = getTitleInfo((unhexlify(title_id)))
         printTitleInfo(title_name_stripped, region, product_code, publisher, crypto_seed, curr_version, title_size)
-        #except:
-        #    raise
 
         if crypto_seed != None:
             # Add crypto seed to crypto database
@@ -523,10 +521,9 @@ for i in range(content_count):
             raise SystemExit(0)
 
         print('Fetching title metadata for ' + title_id + '\n')
-        #try:
+
         title_name_stripped, region, product_code, publisher, crypto_seed, curr_version, title_size = getTitleInfo((unhexlify(title_id)))
-        #except:
-        #    raise
+
         # set IV to offset 0xf0 length 0x10 of ciphertext; thanks to yellows8 for the offset
         check_temp_perm = check_temp.read()
         decryptor = AES.new(unhexlify(title_key), AES.MODE_CBC, check_temp_perm[0xf0:0x100])
@@ -607,28 +604,28 @@ if crypto_seed == '' and nocert == 1 and no_wait == 0:
     print('Could not check for 9.6 crypto seed automatically due to secure connection failure!')
     print('')
     print('If this is a 9.6+ game, then it will fail to load once installed unless the system')
-    print('connects to the eShop at least once after install to update seeddb, or you place')
+    print('connects to the eShop at least once after install to update seeddb, the or you place')
     print('the cert files in the current directory and rerun this script for manual decryption.')
     print('')
-    input('Press Enter to continue...')
 
 if crypto_seed != '' and no_wait == 0:
     print('')
     print('This is a 9.6+ eShop game which uses seed encryption.')
     print('')
     print('The NCCH on 9.6+ eShop games is seed encrypted and cannot be used')
-    print('without seed decryption on a 3DS. To fix this you should copy')
-    print('all .dec files and the generated seeddb.bin in the Title ID folder')
+    print('without seed decryption on a 3DS unless the system connects to the eShop')
+    print('at least once after install to update seeddb.')
+    print('')
+    print('To fix this you should copy')
+    print('the generated seeddb.bin and .cia file in the Title ID folder')
     print('to \'/D9Game/\' on your SD card, then use the following option in Decrypt9:')
     print('')
-    print('\'Game Decryptor Options\' > \'NCCH/NCSD Decryptor\'')
+    print('\'Content Decryptor Options\' > \'NCCH/NCSD Decryptor\'')
     print('')
-    print('Once you have decrypted the files, copy the .dec files from')
-    print('\'/D9Game/\' back into the Title ID folder, overwriting them.')
+    print('Once you have decrypted the file, the resulting .cia can successfully be installed')
     print('')
     print('NOTE: The generated .3ds files will not work with Gateway')
     print('')
-    input('Press Enter once you have done this...')
 
 # create the RSF File
 rom_rsf = 'Option:\n  MediaFootPadding: true\n  EnableCrypt: false\nSystemControlInfo:\n  SaveDataSize: $(SaveSize)K'
