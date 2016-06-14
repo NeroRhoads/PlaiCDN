@@ -604,7 +604,7 @@ if crypto_seed == '' and nocert == 1 and no_wait == 0:
     print('Could not check for 9.6 crypto seed automatically due to secure connection failure!')
     print('')
     print('If this is a 9.6+ game, then it will fail to load once installed unless the system')
-    print('connects to the eShop at least once after install to update seeddb, the or you place')
+    print('connects to the eShop at least once after install to update seeddb, or you place')
     print('the cert files in the current directory and rerun this script for manual decryption.')
     print('')
 
