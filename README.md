@@ -23,8 +23,7 @@ Usage: PlaiCDN \<TitleID TitleKey\> \<Options\> for content options
 \-no3ds    : don't build 3DS file    
 \-nocia    : don't build CIA file    
 \-nobuild  : don't build 3DS or CIA    
-\-nohash   : ignore hash checks    
-\-nowait   : no crypt message/waiting for input    
+\-nohash   : ignore hash checks        
 \-check    : checks if title id matches key    
 
 Usage: PlaiCDN \<TitleID\> for general options    

@@ -88,7 +88,6 @@ def system_usage():
     print('-nocia    : don\'t build CIA file')
     print('-nobuild  : don\'t build 3DS or CIA')
     print('-nohash   : ignore hash checks')
-    print('-nowait   : no crypt message/waiting for input')
     print('-check    : checks if title id matches key')
     print('')
     print('Usage: PlaiCDN <TitleID> for general options')
@@ -395,7 +394,6 @@ make_3ds = 1
 make_cia = 1
 check_key = 0
 no_hash = 0
-no_wait = 0
 check_temp_out = None
 nocert = 0
 first_pass = 1
@@ -406,12 +404,10 @@ for i in range(len(sys.argv)):
     elif sys.argv[i] == '-no3ds': make_3ds = 0
     elif sys.argv[i] == '-nocia': make_cia = 0
     elif sys.argv[i] == '-check': check_key = 1
-    elif sys.argv[i] == '-nowait': no_wait = 1
-    elif sys.argv[i] == '-nohash': no_hash = no_wait = 1
+    elif sys.argv[i] == '-nohash': no_hash = 1
     elif sys.argv[i] == '-nobuild':
         make_cia = 0
         make_3ds = 0
-        no_wait = 1
 
 if (len(title_key) != 32 and not os.path.isfile('decTitleKeys.bin')) or len(title_id) != 16:
     print('Invalid arguments')
@@ -599,7 +595,7 @@ for i in range(content_count):
     command_c_id = command_c_id + ['-i', f_out + ':0x' + c_idx + ':0x' + c_id]
     first_pass = 0
 
-if crypto_seed == '' and nocert == 1 and no_wait == 0:
+if crypto_seed == '' and nocert == 1:
     print('')
     print('Could not check for 9.6 crypto seed automatically due to secure connection failure!')
     print('')
@@ -608,7 +604,7 @@ if crypto_seed == '' and nocert == 1 and no_wait == 0:
     print('the cert files in the current directory and rerun this script for manual decryption.')
     print('')
 
-if crypto_seed != '' and no_wait == 0:
+if crypto_seed != '':
     print('')
     print('This is a 9.6+ eShop game which uses seed encryption.')
     print('')
