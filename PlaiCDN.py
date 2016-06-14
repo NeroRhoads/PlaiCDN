@@ -89,6 +89,7 @@ def system_usage():
     print('-nobuild  : don\'t build 3DS or CIA')
     print('-nohash   : ignore hash checks')
     print('-check    : checks if title id matches key')
+    print('-fast     : skips name retrieval when using -check')
     print('')
     print('Usage: PlaiCDN <TitleID> for general options')
     print('-info     : to display detailed metadata')

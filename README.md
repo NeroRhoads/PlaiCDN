@@ -25,6 +25,7 @@ Usage: PlaiCDN \<TitleID TitleKey\> \<Options\> for content options
 \-nobuild  : don't build 3DS or CIA    
 \-nohash   : ignore hash checks        
 \-check    : checks if title id matches key    
+\-fast     : skips name retrieval when using -check    
 
 Usage: PlaiCDN \<TitleID\> for general options    
 \-info     : to display detailed metadata    
