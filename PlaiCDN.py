@@ -20,7 +20,7 @@ import ssl
 import sys
 import urllib.request, urllib.error, urllib.parse
 
-##########From http://stackoverflow.com/questions/600268/mkdir-p-functionality-in-python
+# from http://stackoverflow.com/questions/600268/
 def pmkdir(path):
     try:
         os.makedirs(path)
@@ -29,7 +29,7 @@ def pmkdir(path):
             pass
         else: raise
 
-##########From http://stackoverflow.com/questions/377017/test-if-executable-exists-in-python/377028#377028
+# from http://stackoverflow.com/questions/377017/377028#377028
 def which(program):
     import os
     def is_exe(fpath):
@@ -46,7 +46,7 @@ def which(program):
                 return exe_file
     return None
 
-##########Based on https://stackoverflow.com/questions/5783517/downloading-progress-bar-urllib2-python
+# based on https://stackoverflow.com/questions/5783517/
 def report_chunk(bytes_so_far, chunk_size, total_size):
     percent = float(bytes_so_far) / total_size
     percent = round(percent*100, 2)

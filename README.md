@@ -1,17 +1,13 @@
-You're on your own for the keys ([but I've heard of this site that has a database of them...](http://lmgtfy.com/?q=http%3A%2F%2F3ds.nfshost.com)).
+**This script was proof of concept and is no longer under active development. It remains here as an example for how to do much of the eShop's functionality in an external tool, but is in no way polished.**
 
-This script now pulls title metadata directly off the CDN by CLCert-A.
-
-**Requires [makerom](https://github.com/profi200/Project_CTR/releases), [ctr-common-1.crt](https://mega.nz/#!Rp9CDZSY!iDopFefUj2oZERWYHm3BDbEKDhmD363YVX24TCkwp50) ([mirror](https://drive.google.com/open?id=0BzPfvjeuhqoDcnhNcjNMWlV6MFk)), and [ctr-common-1.key](https://mega.nz/#!ZxdD1DKK!eksGHKw4psuouBN1y_yeh2x3eIvXyK1IHHMfs-vTJvs) ([mirror](https://drive.google.com/open?id=0BzPfvjeuhqoDd01oNUw4N0RpNFk)) to be in the directory**   
 ___
 
-This script is used with **decrypted** titlekeys from **decTitleKeys.bin**. If you need a tool that uses **encrypted** titlekeys and **encTitleKeys.bin** then use [@cearp's tool](https://gbatemp.net/threads/423025/) instead.
+You're on your own for the keys
 
-Advantage to **decrypted** titlekeys:
-  - Titlekey can be checked if correct against encrypted CDN content to ensure it is correct
+**Requires [makerom](https://github.com/profi200/Project_CTR/releases), [ctr-common-1.crt and ctr-common-1.key](https://plailect.github.io/Guide/ctr-common-1.torrent) to be in the directory**   
+___
 
-Advantage to **encrypted** titlekeys:
-  - Game can be repaired/redownloaded from the eShop application
+This script is **proof of concept** tool that uses **decrypted** titlekeys from **decTitleKeys.bin**. For a more feature complete tool that uses **encrypted** titlekeys and **encTitleKeys.bin** then use [@Cruel's tool](https://github.com/Cruel/freeShop) instead.
 
 Until such time as the bootrom and its relevant keys (0x3D KeyX to be specific) have been obtained, you will have to choose between encrypted and decrypted titlekeys since we cannot encrypt/decrypt them from a PC yet.
 
@@ -53,8 +49,6 @@ Examples (note this is not the correct key):
   + this would check all game keys in `decTitleKeys.bin` to see if they match their titles, in addition to outputting metadata on them pulled from the CDN
 
 ___
-
-If you are using the script itself instead of the compiled .exe, you will also need [Python 3](https://www.python.org/downloads/) to be installed, and [PyCrypto](https://pypi.python.org/pypi/pycrypto) to be installed.
 
 If pycrypto gives you issues installing, try using [this](https://github.com/sfbahr/PyCrypto-Wheels).
 
