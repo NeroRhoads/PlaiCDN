@@ -4,7 +4,7 @@ ___
 
 You're on your own for the keys
 
-**Requires [makerom](https://github.com/profi200/Project_CTR/releases), [ctr-common-1.crt and ctr-common-1.key](https://plailect.github.io/Guide/ctr-common-1.torrent) to be in the directory**   
+**Requires [makerom](https://github.com/profi200/Project_CTR/releases), [ctr-common-1.crt and ctr-common-1.key](https://plailect.github.io/Guide/torrents/ctr-common-1.torrent) to be in the directory**   
 ___
 
 This script is **proof of concept** tool that uses **decrypted** titlekeys from **decTitleKeys.bin**. For a more feature complete tool that uses **encrypted** titlekeys and **encTitleKeys.bin** then use [@Cruel's tool](https://github.com/Cruel/freeShop) instead.
