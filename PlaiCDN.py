@@ -194,6 +194,8 @@ def getTitleInfo(title_id):
     if 'Windows' in platform.system():
         title_name_stripped = ''.join([i if ord(i) < 128 else ' ' for i in title_name])
         publisher = ''.join([i if ord(i) < 128 else ' ' for i in publisher])
+    else:
+        title_name_stripped = title_name
 
     return(title_name_stripped, region, product_code, publisher, crypto_seed, curr_version, title_size)
 
