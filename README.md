@@ -4,7 +4,11 @@ ___
 
 You're on your own for the keys
 
-**Requires [makerom](https://github.com/profi200/Project_CTR/releases), [ctr-common-1.crt and ctr-common-1.key](https://plailect.github.io/Guide/torrents/ctr-common-1.torrent) to be in the directory**   
+**Requires [makerom](https://github.com/profi200/Project_CTR/releases), ctr-common-1.crt and ctr-common-1.key (magnet below) to be in the directory** 
+
+````
+magnet:?xt=urn:btih:af6d3f8b0a9c13d63b9405dc375cc68af614394d&dn=ctr-common-1.zip&tr=udp%3A%2F%2Ftracker.yoshi210.com%3A6969%2Fannounce&tr=http%3A%2F%2Ftracker.tfile.me%2Fannounce&tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker.aletorrenty.pl%3A2710%2Fannounce&tr=udp%3A%2F%2Ftorrent.gresille.org%3A80%2Fannounce&tr=udp%3A%2F%2Ftracker.filetracker.pl%3A8089%2Fannounce&tr=http%3A%2F%2Ftorrent.gresille.org%2Fannounce&tr=udp%3A%2F%2Fexplodie.org%3A6969%2Fannounce&tr=http%3A%2F%2Ftracker.aletorrenty.pl%3A2710%2Fannounce&tr=udp%3A%2F%2Fp4p.arenabg.com%3A1337%2Fannounce&tr=udp%3A%2F%2Ftracker.tiny-vps.com%3A6969%2Fannounce&tr=http%3A%2F%2Ftracker.baravik.org%3A6970%2Fannounce&tr=http%3A%2F%2Ftracker1.wasabii.com.tw%3A6969%2Fannounce&tr=udp%3A%2F%2Fzer0day.ch%3A1337%2Fannounce&tr=http%3A%2F%2Fexplodie.org%3A6969%2Fannounce&tr=http%3A%2F%2Fp4p.arenabg.com%3A1337%2Fannounce&tr=udp%3A%2F%2F9.rarbg.com%3A2710%2Fannounce&tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&tr=http%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce
+````
 ___
 
 This script is **proof of concept** tool that uses **decrypted** titlekeys from **decTitleKeys.bin**. For a more feature complete tool that uses **encrypted** titlekeys and **encTitleKeys.bin** then use [@Cruel's tool](https://github.com/Cruel/freeShop) instead.
